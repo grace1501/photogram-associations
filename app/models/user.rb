@@ -22,7 +22,7 @@ class User < ApplicationRecord
   ## Direct associations
 
   # User#comments: returns rows from the comments table associated to this user by the author_id column
-  has_many(:comments)
+  has_many(:comments, class_name: "Comment", foreign_key: "author_id")
   # User#own_photos: returns rows from the photos table  associated to this user by the owner_id column
   has_many(:own_photos, class_name: "Photo", foreign_key: "owner_id")
   # User#likes: returns rows from the likes table associated to this user by the fan_id column
@@ -33,18 +33,19 @@ class User < ApplicationRecord
   has_many(:received_follow_requests, class_name: "FollowRequest", foreign_key: "recipient_id")
 
   ### Scoped direct associations
-
+  
   # User#accepted_sent_follow_requests: returns rows from the follow requests table associated to this user by the sender_id column, where status is 'accepted'
-
+  has_many(:accepted_sent_follow_requests, -> {where status: "accepted" }, class_name: "FollowRequest", foreign_key: "sender_id")
   # User#accepted_received_follow_requests: returns rows from the follow requests table associated to this user by the recipient_id column, where status is 'accepted'
+  has_many(:accepted_received_follow_requests, -> {where status: "accepted" }, class_name: "FollowRequest", foreign_key: "recipient_id")
 
 
   ## Indirect associations
 
   # User#liked_photos: returns rows from the photos table associated to this user through its likes
-
+  has_many(:liked_photos, through: :likes, source: :photo)
   # User#commented_photos: returns rows from the photos table associated to this user through its comments
-
+  has_many(:commented_photos, through: :comments, source: :photo)
 
   ### Indirect associations built on scoped associations
 
@@ -56,43 +57,46 @@ class User < ApplicationRecord
 
   # User#discover: returns rows from the photos table associated to this user through its leaders (the leaders' liked_photos)
 
-  def comments
-    my_id = self.id
 
-    matching_comments = Comment.where({ :author_id => my_id })
 
-    return matching_comments
-  end
+  
+  # def comments
+  #   my_id = self.id
 
-  def own_photos
-    my_id = self.id
+  #   matching_comments = Comment.where({ :author_id => my_id })
 
-    matching_photos = Photo.where({ :owner_id => my_id })
+  #   return matching_comments
+  # end
 
-    return matching_photos
-  end
+  # def own_photos
+  #   my_id = self.id
 
-  def likes
-    my_id = self.id
+  #   matching_photos = Photo.where({ :owner_id => my_id })
 
-    matching_likes = Like.where({ :fan_id => my_id })
+  #   return matching_photos
+  # end
 
-    return matching_likes
-  end
+  # def likes
+  #   my_id = self.id
 
-  def liked_photos
-    my_likes = self.likes
+  #   matching_likes = Like.where({ :fan_id => my_id })
+
+  #   return matching_likes
+  # end
+
+  # def liked_photos
+  #   my_likes = self.likes
     
-    array_of_photo_ids = Array.new
+  #   array_of_photo_ids = Array.new
 
-    my_likes.each do |a_like|
-      array_of_photo_ids.push(a_like.photo_id)
-    end
+  #   my_likes.each do |a_like|
+  #     array_of_photo_ids.push(a_like.photo_id)
+  #   end
 
-    matching_photos = Photo.where({ :id => array_of_photo_ids })
+  #   matching_photos = Photo.where({ :id => array_of_photo_ids })
 
-    return matching_photos
-  end
+  #   return matching_photos
+  # end
 
   def commented_photos
     my_comments = self.comments
